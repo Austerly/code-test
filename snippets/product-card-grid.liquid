@@ -1,3 +1,42 @@
+{% comment %}
+  START: Get featured img color from tags
+{% endcomment %}
+
+  {% assign featured_color = 'none' %}
+
+  {% for tag in product.tags %}
+    {% if tag contains 'Featured:' %}
+
+      {% assign featured_color = tag | split: 'Featured: ' %}
+      {% assign featured_color = featured_color | last | downcase %}
+      {% break %}
+
+    {% endif %}
+  {% endfor %}
+
+{% comment %}
+  END: Get featured img color from tags
+{% endcomment %}
+
+{% comment %}
+  START: Reorganize img array for featured product img
+{% endcomment %}
+
+  {% unless featured_color == 'none' %}
+
+    {% for image in product.images %}
+      {% assign alt_tag = image.alt | downcase %}
+      {% if alt_tag == featured_color %}
+        {% assign featured_product_img = image | default: featured_product_img %}
+        {% break %}
+      {% endif %}
+    {% endfor %}
+  {% endunless %}
+
+{% comment %}
+  END: Reorganize img array for featured product img
+{% endcomment %}  
+
 <div class="grid-view-item{% unless product.available %} grid-view-item--sold-out{% endunless %} product-card">
   <a class="grid-view-item__link grid-view-item__image-container full-width-link" href="{{ product.url | within: collection }}">
     <span class="visually-hidden">{{ product.title }}</span>
@@ -5,20 +44,20 @@
 
   {% capture img_id %}ProductCardImage-{{ section.id }}-{{ product.id }}{% endcapture %}
   {% capture wrapper_id %}ProductCardImageWrapper-{{ section.id }}-{{ product.id }}{% endcapture %}
-  {%- assign img_url = product.featured_image | img_url: '1x1' | replace: '_1x1.', '_{width}x.' -%}
+  {%- assign img_url = featured_product_img | img_url: '1x1' | replace: '_1x1.', '_{width}x.' -%}
 
-  {% unless product.featured_image == blank %}
-    {% include 'image-style' with image: product.featured_image, width: max_height, height: max_height, small_style: true, wrapper_id: wrapper_id, img_id: img_id %}
+  {% unless featured_product_img == blank %}
+    {% include 'image-style' with image: featured_product_img, width: max_height, height: max_height, small_style: true, wrapper_id: wrapper_id, img_id: img_id %}
   {% endunless %}
 
   <div id="{{ wrapper_id }}" class="grid-view-item__image-wrapper js">
-    <div style="padding-top:{% unless product.featured_image == blank %}{{ 1 | divided_by: product.featured_image.aspect_ratio | times: 100}}%{% else %}100%{% endunless %};">
+    <div style="padding-top:{% unless featured_product_img == blank %}{{ 1 | divided_by: featured_product_img.aspect_ratio | times: 100}}%{% else %}100%{% endunless %};">
       <img id="{{ img_id }}"
             class="grid-view-item__image lazyload"
-            src="{{ product.featured_image | img_url: '300x300' }}"
+            src="{{ featured_color_img | default: featured_product_img | img_url: '300x300' }}"
             data-src="{{ img_url }}"
             data-widths="[180, 360, 540, 720, 900, 1080, 1296, 1512, 1728, 2048]"
-            data-aspectratio="{{ product.featured_image.aspect_ratio }}"
+            data-aspectratio="{{ featured_product_img.aspect_ratio }}"
             data-sizes="auto"
             alt="">
     </div>
@@ -26,7 +65,7 @@
 
   <noscript>
     {% capture image_size %}{{ max_height }}x{{ max_height }}{% endcapture %}
-    <img class="grid-view-item__image" src="{{ product.featured_image.src | img_url: image_size, scale: 2 }}" alt="{{ product.featured_image.alt }}" style="max-width: {{ max_height | times: product.featured_image.aspect_ratio }}px;">
+    <img class="grid-view-item__image" src="{{ featured_product_img.src | img_url: image_size, scale: 2 }}" alt="{{ featured_product_img.alt }}" style="max-width: {{ max_height | times: featured_product_img.aspect_ratio }}px;">
   </noscript>
 
   <div class="h4 grid-view-item__title" aria-hidden="true">{{ product.title }}</div>
